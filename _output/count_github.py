@@ -1,26 +1,25 @@
 import pandas as pd
 
-# Load the CSV files
-files = ["data/question_tags.csv", "data/questions.csv"]  # Replace with actual file names
-count = 0
+# Files to process
+files = ["questions.csv", "question_tags.csv"]
 
-for file in files:
+# Keyword to search
+keyword = "GitHub"
+
+# Function to count occurrences
+def count_lines_with_keyword(file_path, keyword):
+    count = 0
+    chunk_size = 10**6  # Process large files in chunks
     try:
-        # Read CSV file
-        df = pd.read_csv(file, dtype=str, on_bad_lines="skip")
-
-        # Count occurrences of "GitHub" (case-insensitive) in any column
-        count += df.apply(lambda row: row.astype(str).str.contains("GitHub", case=False, na=False).any(), axis=1).sum()
-
+        for chunk in pd.read_csv(file_path, chunksize=chunk_size, dtype=str, encoding="utf-8", on_bad_lines="skip"):
+            count += chunk.astype(str).apply(lambda x: x.str.contains(keyword, case=False, na=False)).sum().sum()
+        print(f"Total lines containing '{keyword}' in {file_path}: {count}")
     except FileNotFoundError:
-        print(f"Warning: {file} not found.")
+        print(f"Error: {file_path} not found.")
     except Exception as e:
-        print(f"Error processing {file}: {e}")
+        print(f"Error processing {file_path}: {e}")
 
-# Print the total count
-print(f"Total lines containing 'GitHub': {count}")
-
-# Save the result to a text file
-with open("_output/github_count.txt", "w") as f:
-    f.write(f"Total lines containing 'GitHub': {count}\n")
+# Run the count function
+for file in files:
+    count_lines_with_keyword(file, keyword)
 
